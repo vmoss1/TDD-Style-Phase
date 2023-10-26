@@ -1,120 +1,131 @@
-//!!START
-const chai = require("chai");
-const expect = chai.expect;
-const spies = require("chai-spies");
-chai.use(spies);
+const Person = require('../problems/person')
+const chai = require('chai')
+const expect = chai.expect
+const spies = require('chai-spies')
+chai.use(spies)
 
-const Person = require("../problems/person");
+let person;
+let name = 'Hao'
+let age = 22
 
-describe("Person", () => {
-  let person;
-  let otherPerson;
-  let name = "Alice";
-  let age = 42;
-  let otherName = "Bob";
-  let otherAge = 64;
+let person2;
+let name2 = 'Veronica'
+let age2 = 27
 
+describe('Person', () => {
   beforeEach(() => {
-    person = new Person(name, age);
-    otherPerson = new Person(otherName, otherAge);
-  });
+    person = new Person(name, age)
+    person2 = new Person(name2, age2)
+  })
 
-  describe("constructor()", () => {
-    it("should return an instance of Person", () => {
-      expect(person).to.be.an.instanceof(Person);
-    });
+  describe('constructor()', () => {
+    it('should be an instance of Person', () => {
+      expect(person instanceof Person).to.equal(true)
+    })
 
-    it("should set name and age properties", () => {
-      expect(person.name).to.equal(name);
-      expect(person.age).to.equal(age);
-    });
-  });
+    it('should correctly set name and age property', () => {
+      expect(person.age).to.equal(age)
+      expect(person.name).to.equal(name)
+    })
+  })
 
-  describe("sayHello()", () => {
-    it("should greet the user", () => {
-      expect(person.sayHello()).to.equal(`Hello, ${name}.`);
-    });
-  });
+  describe('sayHello()', () => {
+    it(`return a string of the Person instance's name and a greeting message`, () => {
+      expect(person.sayHello()).to.equal(`${name} says hello!`)
+    })
+  })
 
-  describe("visit(otherPerson)", () => {
-    it("should tell us person visited otherPerson", () => {
-      expect(person.visit(otherPerson)).to.equal(
-        `${name} visited ${otherName}`
-      );
-    });
-  });
+  describe('visit(otherPerson)', () => {
+    it(`return a string stating that this instane visited the passed-in person instance`, () => {
+      expect(person.visit(person2)).to.equal(`${name} visited ${name2}.`)
+    })
+  })
 
-  describe("switchVisit(otherPerson)", () => {
-    it("should visit the other person", () => {
-      expect(person.switchVisit(otherPerson)).to.equal(
-        `${otherName} visited ${name}`
-      );
-    });
+  describe('switchVisit(otherPerson)', () => {
+    it(`should invoke the visit function of the parameter (otherPerson), passing in the current instance as the argument.`, () => {
+      expect(person.switchVisit(person2)).to.equal(`${name2} visited ${name}.`)
+      expect(person2.switchVisit(person)).to.equal(`${name} visited ${name2}.`)
+    })
+  })
 
-    it("should call otherPerson.visit", () => {
-      const otherPersonVisitSpy = chai.spy.on(otherPerson, "visit");
-      person.switchVisit(otherPerson);
-      expect(otherPersonVisitSpy).to.have.been.called.once;
-    });
-  });
+  describe('update(obj)', () => {
+    context('invalid object', () => {
+      it('should throw TypeError if incoming argument is not an object', () => {
+        const msg = "Input must be object!"
+        expect(() => person.update(31)).to.throw(TypeError, msg)
+        expect(() => person.update([])).to.throw(TypeError, msg)
+      })
 
-  describe("update(obj)", () => {
-    context("when the argument is a valid object", () => {
-      it("should update the name and age", () => {
-        const newName = "Bob";
-        const newAge = 64;
-        person.update({ name: newName, age: newAge });
-        expect(person.name).to.equal(newName);
-        expect(person.age).to.equal(newAge);
-      });
-    });
+      it('should throw TypeError if incoming argument object does not have age and name property', () => {
+        const msg = "must have age and name"
+        expect(() => person.update({ name: '?' })).throw(TypeError, msg)
+        expect(() => person.update({ age: '?' })).throw(TypeError, msg)
+        expect(() => person.update({})).throw(TypeError, msg)
+      })
+    })
 
-    context("when the argument is not a valid object", () => {
-      it("should throw a TypeError when it's not an object", () => {
-        expect(() => person.update(1)).to.throw(TypeError);
-      });
+    context('valid object', () => {
+      it('should correctly update current object', () => {
+        expect(person.name).to.equal(name)
+        expect(person.age).to.equal(age)
+        person.update({ name: '?', age: '?' })
+        expect(person.name).to.equal('?')
+        expect(person.age).to.equal('?')
+      })
+    })
+  })
 
-      it("should throw a TypeError when the object does not have a name", () => {
-        const newName = "Bob";
-        expect(() => person.update({ name: newName })).to.throw(TypeError);
-      });
+  describe('tryUpdate(obj)', () => {
+    context('successful update', () => {
+      it('should return true on successful update', () => {
+        expect(person.tryUpdate({ name: '?', age: '?' })).to.equal(true)
+        expect(person2.tryUpdate({ name: '??', age: '??' })).to.equal(true)
+      })
+    })
 
-      it("should throw a TypeError when the object does not have an age", () => {
-        const newAge = 64;
-        expect(() => person.update({ age: newAge })).to.throw(TypeError);
-      });
-    });
-  });
+    context('update fail', () => {
+      it('should return false on unsuccessful update', () => {
+        expect(person.tryUpdate({ age: '?' })).to.equal(false)
+        expect(person.tryUpdate({ name: '?' })).to.equal(false)
+        expect(person.tryUpdate({})).to.equal(false)
+      })
+    })
+  })
 
-  describe("tryUpdate(obj)", () => {
-    context("when successful", () => {
-      it("should return true if the update was successful", () => {
-        const newName = "Bob";
-        const newAge = 64;
-        expect(person.tryUpdate({ name: newName, age: newAge })).to.be.true;
-      });
-    });
+  describe('static greetAll(obj)', () => {
+    it('should throw TypeError for invalid input', () => {
+      expect(() => Person.greetAll(0)).to.throw()
+      expect(() => Person.greetAll([person, 1])).to.throw()
+      expect(() => Person.greetAll([person, 1, person2])).to.throw()
+    })
 
-    context("when unsuccessful", () => {
-      it("should return true if the update was successful", () => {
-        expect(person.tryUpdate(1)).to.be.false;
-      });
-    });
-  });
+    it('should return an array of strings', () => {
+      const result = Person.greetAll([person])
+      expect(result).to.be.an.instanceof(Array)
+      result.forEach(res => expect(typeof res == 'string').to.equal(true))
+    })
 
-  describe("static greetAll(people)", () => {
-    it("should greet all the people", () => {
-      expect(Person.greetAll([person, otherPerson])).to.deep.equal([
-        `Hello, ${person.name}.`,
-        `Hello, ${otherPerson.name}.`
-      ]);
-    });
+    it('should called sayHello() on each person in the input array', () => {
+      const sayHelloSpy = chai.spy.on(Person.prototype, "sayHello")
+      Person.greetAll([person, person2])
+      expect(sayHelloSpy).to.have.been.called.exactly(2)
 
-    it("should call sayHello for every person", () => {
-      sayHelloSpy = chai.spy.on(Person.prototype, "sayHello");
-      Person.greetAll([person, otherPerson]);
-      expect(sayHelloSpy).to.have.been.called.twice;
-    });
-  });
-});
-//!!END
+      Person.greetAll([person])
+      expect(sayHelloSpy).to.have.been.called.exactly(3)
+    })
+
+    it('should returns a list of greets from people', () => {
+      expect(Person.greetAll([person, person2])).to.deep.equal([
+        `${name} says hello!`,
+        `${name2} says hello!`
+      ])
+      expect(Person.greetAll([person2, person])).to.deep.equal([
+        `${name2} says hello!`,
+        `${name} says hello!`
+      ])
+      expect(Person.greetAll([person])).to.deep.equal([
+        `${name} says hello!`,
+      ])
+    })
+  })
+})
